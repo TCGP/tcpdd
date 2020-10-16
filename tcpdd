@@ -1,0 +1,31 @@
+#!/bin/bash
+## create by ryan  at  20200910
+## record tcpdump raw data  , default  port 80 inout 
+
+dt=`date +%Y%m%d%H`
+spath="/var/log/tcpdumpd"
+avg_port=${1:-80}
+avg_dir=${2:-inout}
+avg_inf=${3:-any}
+pef=${4:-mydump}
+
+if [ "$1" == "--help" -o "$1" == "-h" ] ; then
+        echo "tcpdd port[num] dir[inout|in|out] infterface[any|ethx|ensx] pef[string]"
+        echo "ex: tcpdd 443 in eth0 mydump"
+        exit 0
+fi
+
+if [ ! -d $spath ] ;then  mkdir -p ${spath} ; fi
+secplus=$(((`date +%s`/3600+1)*3600-`date +%s`))
+
+tcpdump -i ${avg_inf} -G ${secplus} -W 1 -Q ${avg_dir} -z gzip port ${avg_port} -w ${spath}/${pef}-${dt}-${avg_port}-${avg_dir}.pcap >/dev/null 2>&1 &
+
+if [ `date +%H` == "00" ] ;then
+        sleep 180
+        yt=`date -d "1 day ago" +%Y%m%d`
+        ym=`date -d "30 days ago" +%Y%m%d`
+        find ${spath} -name "${pef}-${yt}*.pcap.gz" -type f -print0 | tar -cf ${spath}/days-${pef}-${yt}.tar  --null -T -  >/dev/null 2>&1
+        find ${spath} -name "${pef}-${yt}*.pcap.gz" -type f -exec rm {} \;
+        find ${spath} -name "days-${pef}-${ym}.tar" -type f -exec rm {} \;
+
+fi
