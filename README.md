@@ -16,3 +16,10 @@ mv tcpdd /usr/sbin/
 crontab -e  
 0 * * * * tcpdd 80 in eth0 mydump
 
+## other
+for debian 10 apparmor
+vim  /etc/apparmor.d/local/usr.sbin.tcpdump
+/**.[pP][cC][aA][pP].[gG][zZ] rw,
+:wq
+
+apparmor_parser -r /etc/apparmor.d/usr.sbin.tcpdump
